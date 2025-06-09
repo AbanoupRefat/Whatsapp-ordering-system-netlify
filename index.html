@@ -703,6 +703,7 @@ function filterProducts() {
 
 // Render products table
 // Render products table
+// Render products table
 function renderProducts() {
     const tbody = document.getElementById('productsTableBody');
     tbody.innerHTML = '';
@@ -713,9 +714,15 @@ function renderProducts() {
 
     let currentCategory = '';
 
-    pageProducts.forEach(product => {
+    pageProducts.forEach((product, index) => {
+        // Skip if product is undefined or null
+        if (!product) {
+            console.warn('Undefined product at index:', index);
+            return;
+        }
+
         // Handle empty row separators (sub-category breaks)
-        if (product.isSeparator) {
+        if (product.isSeparator === true || product.name === '' || !product.name) {
             const separatorRow = document.createElement('tr');
             separatorRow.className = 'separator-row-visual';
             separatorRow.innerHTML = `<td colspan="5"></td>`;
@@ -734,18 +741,24 @@ function renderProducts() {
             tbody.appendChild(categoryRow);
         }
 
+        // Skip if this is just a category header without actual product data
+        if (!product.price || product.price === '' || product.price === 0) {
+            console.warn('Product missing price:', product);
+            return;
+        }
+
         // Create consistent product key
-        const productKey = product.id || product.name;
+        const productKey = product.id || product.name || `product_${index}`;
         const quantity = cart[productKey]?.quantity || 0;
-        const price = parseFloat(product.price);
+        const price = parseFloat(product.price) || 0;
         const subtotal = quantity * price;
 
-        // Add product row (only products with data)
+        // Add product row (only products with valid data)
         const row = document.createElement('tr');
         row.className = 'table-row';
         row.innerHTML = `
-            <td class="table-cell product-name">${product.name}</td>
-            <td class="table-cell">${product.origin}</td>
+            <td class="table-cell product-name">${product.name || 'منتج غير محدد'}</td>
+            <td class="table-cell">${product.origin || 'غير محدد'}</td>
             <td class="table-cell price-cell">${price.toFixed(0)} ج.م</td>
             <td class="table-cell">
                 <div class="quantity-controls">
@@ -772,10 +785,26 @@ function renderProducts() {
         tbody.appendChild(emptyRow);
     }
 
-    updatePagination();
-    updateResultsInfo();
-}}
+    // Debug logging
+    console.log('Rendered products for page', currentPage, ':', pageProducts.length, 'products');
+    console.log('Sample product:', pageProducts[0]);
+}
 
+// Debug function to check data structure
+function debugProducts() {
+    console.log('Total products loaded:', products.length);
+    console.log('First 5 products:', products.slice(0, 5));
+    console.log('Filtered products:', filteredProducts.length);
+    
+    // Check for products with missing data
+    const invalidProducts = products.filter(p => !p || !p.name || !p.price);
+    console.log('Products with missing data:', invalidProducts.length, invalidProducts.slice(0, 3));
+    
+    // Check for valid products
+    const validProducts = products.filter(p => p && p.name && p.price && p.price !== '');
+    console.log('Valid products:', validProducts.length);
+    console.log('Sample valid product:', validProducts[0]);
+}
         // Update quantity in cart
         function updateQuantity(productId, price, change) {
     // Ensure we have a consistent product identifier
