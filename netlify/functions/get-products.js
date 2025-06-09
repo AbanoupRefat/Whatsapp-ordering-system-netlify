@@ -2,6 +2,9 @@ const { google } = require('googleapis');
 
 exports.handler = async function(event, context) {
     try {
+        console.log('Function started, method:', event.httpMethod);
+        console.log('Headers:', JSON.stringify(event.headers));
+        
         // Clean and format the private key properly
         let privateKey = process.env.GOOGLE_SHEET_PRIVATE_KEY;
         
@@ -47,14 +50,26 @@ exports.handler = async function(event, context) {
         });
 
         const rows = response.data.values;
+        console.log('Raw rows received:', rows ? rows.length : 0);
+        console.log('First few rows:', rows ? rows.slice(0, 3) : 'No rows');
+        
         if (!rows || rows.length === 0) {
+            console.log('No data found, returning empty products array');
             return {
                 statusCode: 200,
-                body: JSON.stringify({ products: [] }),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Headers': 'Content-Type',
+                    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+                },
+                body: JSON.stringify({ products: [], message: 'No data found' }),
             };
         }
 
         const headers = rows[0]; // Assuming first row is headers
+        console.log('Headers:', headers);
+        
         const products = [];
         let currentCategory = '';
 
@@ -78,14 +93,27 @@ exports.handler = async function(event, context) {
             products.push(product);
         }
 
-        return {
+        console.log('Total products processed:', products.length);
+        console.log('Sample products:', products.slice(0, 2));
+
+        const result = {
             statusCode: 200,
             headers: {
                 'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*', // Adjust for production security if needed
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type',
+                'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
             },
-            body: JSON.stringify({ products }),
+            body: JSON.stringify({ 
+                products,
+                totalCount: products.length,
+                sheetName: sheetName,
+                success: true
+            }),
         };
+        
+        console.log('Returning response with status:', result.statusCode);
+        return result;
 
     } catch (error) {
         console.error('Error fetching data from Google Sheets:', error.message);
@@ -93,9 +121,16 @@ exports.handler = async function(event, context) {
         
         return {
             statusCode: 500,
+            headers: {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type',
+                'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+            },
             body: JSON.stringify({ 
                 error: 'Failed to fetch data from Google Sheets', 
                 details: error.message,
+                success: false,
                 // Don't log sensitive info in production
                 ...(process.env.NODE_ENV !== 'production' && { fullError: error.toString() })
             }),
