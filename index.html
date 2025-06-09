@@ -609,36 +609,30 @@ async function initApp() {
         }
 
         // Handle filter
-        function handleFilter() {
-            currentPage = 1;
-            filterProducts();
-        }
+function handleFilter() {
+    currentPage = 1;
+    filterProducts();
+}
 
-       function filterProducts() {
+// Filter products based on search and filter criteria
+function filterProducts() {
     const searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
     const originFilter = document.getElementById('originFilter').value;
-
+    
     filteredProducts = products.filter(product => {
         const productName = (product.name || '').trim().toLowerCase();
         const matchesSearch = productName.includes(searchTerm);
         const matchesOrigin = originFilter === 'الكل' || product.origin === originFilter;
         return matchesSearch && matchesOrigin;
     });
-
+    
     renderProducts();
     updatePagination();
     updateResultsInfo();
     scrollToTableHeaders();
 }
 
-
-            renderProducts();
-            updatePagination();
-            updateResultsInfo();
-            scrollToTableHeaders(); // New: Scroll to table headers
-        
-
-        // Render products table
+// Render products table
         function renderProducts() {
             const tbody = document.getElementById('productsTableBody');
             tbody.innerHTML = '';
