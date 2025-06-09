@@ -1,74 +1,80 @@
 const { google } = require('googleapis');
 
 exports.handler = async function(event, context) {
+    // Add CORS headers for all responses
+    const headers = {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
+    };
+
+    // Handle preflight requests
+    if (event.httpMethod === 'OPTIONS') {
+        return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify({ message: 'CORS preflight' })
+        };
+    }
+
+    console.log('Function started');
+    console.log('HTTP Method:', event.httpMethod);
+    console.log('Event path:', event.path);
+    console.log('Environment variables check:', {
+        hasClientEmail: !!process.env.GOOGLE_SHEET_CLIENT_EMAIL,
+        hasPrivateKey: !!process.env.GOOGLE_SHEET_PRIVATE_KEY,
+        hasSheetId: !!process.env.GOOGLE_SHEET_ID
+    });
+
     try {
-        console.log('Function started, method:', event.httpMethod);
-        console.log('Headers:', JSON.stringify(event.headers));
-        
-        // Clean and format the private key properly
-        let privateKey = process.env.GOOGLE_SHEET_PRIVATE_KEY;
-        
-        // Remove any extra whitespace and ensure proper line breaks
-        if (privateKey) {
-            privateKey = privateKey
-                .replace(/\\n/g, '\n')  // Replace literal \n with actual newlines
-                .replace(/\s+/g, ' ')   // Replace multiple spaces with single space
-                .replace(/-----BEGIN PRIVATE KEY----- /g, '-----BEGIN PRIVATE KEY-----\n')
-                .replace(/ -----END PRIVATE KEY-----/g, '\n-----END PRIVATE KEY-----')
-                .replace(/-----BEGIN PRIVATE KEY-----\n\s+/, '-----BEGIN PRIVATE KEY-----\n')
-                .replace(/\s+\n-----END PRIVATE KEY-----/, '\n-----END PRIVATE KEY-----');
+        // Check if required environment variables exist
+        if (!process.env.GOOGLE_SHEET_CLIENT_EMAIL || !process.env.GOOGLE_SHEET_PRIVATE_KEY || !process.env.GOOGLE_SHEET_ID) {
+            console.error('Missing required environment variables');
+            return {
+                statusCode: 500,
+                headers,
+                body: JSON.stringify({ 
+                    error: 'Missing required environment variables',
+                    required: ['GOOGLE_SHEET_CLIENT_EMAIL', 'GOOGLE_SHEET_PRIVATE_KEY', 'GOOGLE_SHEET_ID']
+                })
+            };
         }
 
         const auth = new google.auth.GoogleAuth({
             credentials: {
                 client_email: process.env.GOOGLE_SHEET_CLIENT_EMAIL,
-                private_key: privateKey,
+                private_key: process.env.GOOGLE_SHEET_PRIVATE_KEY.replace(/\\n/g, '\n'),
             },
             scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
         });
 
         const sheets = google.sheets({ version: 'v4', auth });
         const spreadsheetId = process.env.GOOGLE_SHEET_ID;
-        
-        // First, get the spreadsheet metadata to find available sheets
-        const spreadsheetInfo = await sheets.spreadsheets.get({
-            spreadsheetId,
-        });
-        
-        // Get the first sheet name (or you can specify a particular sheet)
-        const firstSheet = spreadsheetInfo.data.sheets[0];
-        const sheetName = firstSheet.properties.title;
-        
-        console.log('Available sheets:', spreadsheetInfo.data.sheets.map(s => s.properties.title));
-        console.log('Using sheet:', sheetName);
-        
-        const range = `${sheetName}!A:D`; // Using the actual sheet name, columns A to D (الفئة, البند, المنشأ, السعر)
+        const range = 'Sheet1!A:D';
 
+        console.log('Attempting to fetch from Google Sheets...');
+        
         const response = await sheets.spreadsheets.values.get({
             spreadsheetId,
             range,
         });
 
         const rows = response.data.values;
-        console.log('Raw rows received:', rows ? rows.length : 0);
-        console.log('First few rows:', rows ? rows.slice(0, 3) : 'No rows');
+        console.log('Raw rows received:', rows?.length || 0);
         
         if (!rows || rows.length === 0) {
-            console.log('No data found, returning empty products array');
+            console.log('No data found in spreadsheet');
             return {
                 statusCode: 200,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Headers': 'Content-Type',
-                    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-                },
-                body: JSON.stringify({ products: [], message: 'No data found' }),
+                headers,
+                body: JSON.stringify({ products: [] }),
             };
         }
 
-        const headers = rows[0]; // Assuming first row is headers
-        console.log('Headers:', headers);
+        console.log('First few rows:', rows.slice(0, 3));
+        const headers_row = rows[0];
+        console.log('Headers:', headers_row);
         
         const products = [];
         let currentCategory = '';
@@ -76,63 +82,54 @@ exports.handler = async function(event, context) {
         for (let i = 1; i < rows.length; i++) {
             const row = rows[i];
             
-            // Check if it's a separator row (all values are empty)
-            if (row.every(cell => !cell || cell.trim() === '')) {
+            // Check if it's a separator row (all values are empty or whitespace)
+            if (!row || row.length === 0 || row.every(cell => !cell || cell.trim() === '')) {
                 products.push({ isSeparator: true });
                 continue;
             }
 
-            // Assuming headers are: الفئة, البند, المنشأ, السعر
+            // Create product object
             const product = {
-                category: row[0] || '',
+                category: row[0] || currentCategory || '',
                 name: row[1] || '',
                 origin: row[2] || '',
-                price: row[3] || '',
+                price: row[3] || '0',
             };
+
+            // Update current category if this row has a category
+            if (row[0] && row[0].trim()) {
+                currentCategory = row[0].trim();
+            }
 
             products.push(product);
         }
 
         console.log('Total products processed:', products.length);
         console.log('Sample products:', products.slice(0, 2));
+        console.log('Returning response with status: 200');
 
-        const result = {
+        return {
             statusCode: 200,
-            headers: {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': 'Content-Type',
-                'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-            },
+            headers,
             body: JSON.stringify({ 
                 products,
-                totalCount: products.length,
-                sheetName: sheetName,
-                success: true
+                meta: {
+                    total: products.length,
+                    timestamp: new Date().toISOString()
+                }
             }),
         };
-        
-        console.log('Returning response with status:', result.statusCode);
-        return result;
-
     } catch (error) {
-        console.error('Error fetching data from Google Sheets:', error.message);
-        console.error('Full error:', error);
+        console.error('Error in function:', error);
+        console.error('Error stack:', error.stack);
         
         return {
             statusCode: 500,
-            headers: {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': 'Content-Type',
-                'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-            },
+            headers,
             body: JSON.stringify({ 
                 error: 'Failed to fetch data from Google Sheets', 
                 details: error.message,
-                success: false,
-                // Don't log sensitive info in production
-                ...(process.env.NODE_ENV !== 'production' && { fullError: error.toString() })
+                stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
             }),
         };
     }
