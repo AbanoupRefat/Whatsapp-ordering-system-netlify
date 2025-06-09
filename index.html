@@ -476,26 +476,103 @@
         // const sampleProducts = [...];
 
         // Initialize the app
-        async function initApp() { // Make initApp async
-            const resultsInfo = document.getElementById('resultsInfo');
-            resultsInfo.innerHTML = '<div class="loading">⏳ جاري تحميل المنتجات...</div>';
+        // Initialize the app
+async function initApp() {
+    const resultsInfo = document.getElementById('resultsInfo');
+    resultsInfo.innerHTML = '<div class="loading">⏳ جاري تحميل المنتجات...</div>';
 
-            try {
-                const response = await fetch('/.netlify/functions/get-products');
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+    console.log('Starting app initialization...');
+
+    // Try multiple URLs to see which one works
+    const urlsToTry = [
+        '/api/get-products',
+        '/.netlify/functions/get-products'
+    ];
+
+    for (const url of urlsToTry) {
+        try {
+            console.log(`Trying to fetch from: ${url}`);
+            
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
                 }
-                const data = await response.json();
-                products = data.products; // Assign fetched products
+            });
+            
+            console.log(`Response for ${url}:`, {
+                status: response.status,
+                statusText: response.statusText,
+                ok: response.ok,
+                headers: Object.fromEntries(response.headers.entries())
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error(`Error response from ${url}:`, errorText);
                 
-                populateOriginFilter();
-                filterProducts();
-                setupEventListeners();
-            } catch (error) {
-                console.error('Error initializing app:', error);
-                resultsInfo.innerHTML = '<div class="empty-state"><div class="empty-icon">❌</div><div>فشل تحميل المنتجات. الرجاء المحاولة لاحقاً.</div></div>';
+                if (url === urlsToTry[urlsToTry.length - 1]) {
+                    // This is the last URL to try
+                    throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
+                }
+                continue; // Try next URL
+            }
+
+            const contentType = response.headers.get('Content-Type');
+            console.log(`Content-Type from ${url}:`, contentType);
+
+            let data;
+            if (contentType && contentType.includes('application/json')) {
+                data = await response.json();
+            } else {
+                const text = await response.text();
+                console.log(`Non-JSON response from ${url}:`, text.substring(0, 200));
+                throw new Error(`Expected JSON but got: ${contentType}`);
+            }
+
+            console.log(`Successfully fetched data from ${url}:`, {
+                productsCount: data.products?.length,
+                meta: data.meta,
+                sampleProduct: data.products?.[0]
+            });
+
+            products = data.products || [];
+            
+            if (products.length === 0) {
+                resultsInfo.innerHTML = '<div class="empty-state"><div class="empty-icon">📦</div><div>لا توجد منتجات متاحة حالياً</div></div>';
+                return;
+            }
+
+            populateOriginFilter();
+            filterProducts();
+            setupEventListeners();
+            
+            console.log('App initialization completed successfully');
+            return; // Success, exit the loop
+
+        } catch (error) {
+            console.error(`Error with URL ${url}:`, error);
+            
+            if (url === urlsToTry[urlsToTry.length - 1]) {
+                // This is the last URL, show error
+                console.error('All URLs failed, showing error to user');
+                resultsInfo.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">❌</div>
+                        <div>فشل تحميل المنتجات</div>
+                        <div style="font-size: 0.9rem; color: #666; margin-top: 0.5rem;">
+                            خطأ: ${error.message}
+                        </div>
+                        <div style="font-size: 0.8rem; color: #888; margin-top: 0.5rem;">
+                            الرجاء فتح أدوات المطور للمزيد من التفاصيل
+                        </div>
+                    </div>
+                `;
             }
         }
+    }
+}
 
         // Setup event listeners
         function setupEventListeners() {
