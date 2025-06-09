@@ -616,11 +616,11 @@ async function initApp() {
 
         // Filter products based on search and filter criteria
         function filterProducts() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const searchTerm = document.getElementById('searchInput').value;
             const originFilter = document.getElementById('originFilter').value;
 
             filteredProducts = products.filter(product => {
-                const matchesSearch = product.name.toLowerCase().includes(searchTerm);
+                const matchesSearch = product.name.includes(searchTerm);
                 const matchesOrigin = originFilter === 'الكل' || product.origin === originFilter;
                 return matchesSearch && matchesOrigin;
             });
