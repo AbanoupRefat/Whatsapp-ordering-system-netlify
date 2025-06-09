@@ -2,10 +2,24 @@ const { google } = require('googleapis');
 
 exports.handler = async function(event, context) {
     try {
+        // Clean and format the private key properly
+        let privateKey = process.env.GOOGLE_SHEET_PRIVATE_KEY;
+        
+        // Remove any extra whitespace and ensure proper line breaks
+        if (privateKey) {
+            privateKey = privateKey
+                .replace(/\\n/g, '\n')  // Replace literal \n with actual newlines
+                .replace(/\s+/g, ' ')   // Replace multiple spaces with single space
+                .replace(/-----BEGIN PRIVATE KEY----- /g, '-----BEGIN PRIVATE KEY-----\n')
+                .replace(/ -----END PRIVATE KEY-----/g, '\n-----END PRIVATE KEY-----')
+                .replace(/-----BEGIN PRIVATE KEY-----\n\s+/, '-----BEGIN PRIVATE KEY-----\n')
+                .replace(/\s+\n-----END PRIVATE KEY-----/, '\n-----END PRIVATE KEY-----');
+        }
+
         const auth = new google.auth.GoogleAuth({
             credentials: {
                 client_email: process.env.GOOGLE_SHEET_CLIENT_EMAIL,
-                private_key: process.env.GOOGLE_SHEET_PRIVATE_KEY,
+                private_key: privateKey,
             },
             scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
         });
@@ -33,6 +47,7 @@ exports.handler = async function(event, context) {
 
         for (let i = 1; i < rows.length; i++) {
             const row = rows[i];
+            
             // Check if it's a separator row (all values are empty)
             if (row.every(cell => !cell || cell.trim() === '')) {
                 products.push({ isSeparator: true });
@@ -46,6 +61,7 @@ exports.handler = async function(event, context) {
                 origin: row[2] || '',
                 price: row[3] || '',
             };
+
             products.push(product);
         }
 
@@ -57,11 +73,19 @@ exports.handler = async function(event, context) {
             },
             body: JSON.stringify({ products }),
         };
+
     } catch (error) {
         console.error('Error fetching data from Google Sheets:', error.message);
+        console.error('Full error:', error);
+        
         return {
             statusCode: 500,
-            body: JSON.stringify({ error: 'Failed to fetch data from Google Sheets', details: error.message }),
+            body: JSON.stringify({ 
+                error: 'Failed to fetch data from Google Sheets', 
+                details: error.message,
+                // Don't log sensitive info in production
+                ...(process.env.NODE_ENV !== 'production' && { fullError: error.toString() })
+            }),
         };
     }
-}; 
+};
