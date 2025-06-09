@@ -26,7 +26,20 @@ exports.handler = async function(event, context) {
 
         const sheets = google.sheets({ version: 'v4', auth });
         const spreadsheetId = process.env.GOOGLE_SHEET_ID;
-        const range = 'Sheet1!A:D'; // Assuming your data is in Sheet1, columns A to D (الفئة, البند, المنشأ, السعر)
+        
+        // First, get the spreadsheet metadata to find available sheets
+        const spreadsheetInfo = await sheets.spreadsheets.get({
+            spreadsheetId,
+        });
+        
+        // Get the first sheet name (or you can specify a particular sheet)
+        const firstSheet = spreadsheetInfo.data.sheets[0];
+        const sheetName = firstSheet.properties.title;
+        
+        console.log('Available sheets:', spreadsheetInfo.data.sheets.map(s => s.properties.title));
+        console.log('Using sheet:', sheetName);
+        
+        const range = `${sheetName}!A:D`; // Using the actual sheet name, columns A to D (الفئة, البند, المنشأ, السعر)
 
         const response = await sheets.spreadsheets.values.get({
             spreadsheetId,
