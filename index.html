@@ -219,16 +219,16 @@
         
         /* Category Separator */
         .category-row {
-            background: linear-gradient(90deg, #f7fafc 0%, #e2e8f0 50%, #f7fafc 100%);
-        }
+    background: linear-gradient(90deg, #f7fafc 0%, #e2e8f0 50%, #f7fafc 100%);
+}
         
         .category-cell {
-            text-align: center;
-            font-weight: 600;
-            padding: 1rem;
-            color: #4a5568;
-            font-size: 1.1rem;
-        }
+    text-align: center;
+    font-weight: 600;
+    padding: 1rem;
+    color: #4a5568;
+    font-size: 1.1rem;
+}
         
         /* Pagination */
         .pagination-container {
@@ -378,11 +378,11 @@
 
         /* Separator Row Style */
         .separator-row-visual {
-            background-color: #f0f4f8; /* Light gray background */
-            height: 10px; /* Small height for visual separation */
-            border-bottom: 1px dashed #cbd5e0;
-        }
-
+    background-color: #f8fafc;
+    height: 8px;
+    border-top: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+}
         .separator-row-visual td {
             padding: 0; /* Remove padding */
         }
@@ -633,72 +633,76 @@ function filterProducts() {
 }
 
 // Render products table
-        function renderProducts() {
-            const tbody = document.getElementById('productsTableBody');
-            tbody.innerHTML = '';
+// Render products table
+function renderProducts() {
+    const tbody = document.getElementById('productsTableBody');
+    tbody.innerHTML = '';
 
-            const startIdx = (currentPage - 1) * itemsPerPage;
-            const endIdx = startIdx + itemsPerPage;
-            const pageProducts = filteredProducts.slice(startIdx, endIdx);
+    const startIdx = (currentPage - 1) * itemsPerPage;
+    const endIdx = startIdx + itemsPerPage;
+    const pageProducts = filteredProducts.slice(startIdx, endIdx);
 
-            let currentCategory = '';
+    let currentCategory = '';
 
-            pageProducts.forEach(product => {
-                // Add category separator if needed
-                if (product.category !== currentCategory) {
-                    currentCategory = product.category;
-                    const categoryRow = document.createElement('tr');
-                    categoryRow.className = 'category-row';
-                    categoryRow.innerHTML = `
-                        <td colspan="5" class="category-cell">${currentCategory}</td>
-                    `;
-                    tbody.appendChild(categoryRow);
-                }
-
-                // Add product row
-                const row = document.createElement('tr');
-                row.className = product.isSeparator ? 'separator-row-visual' : 'table-row';
-                
-                if (product.isSeparator) {
-                    row.innerHTML = `<td colspan="5"></td>`; // Empty cell for separator
-                } else {
-                    const quantity = cart[product.name]?.quantity || 0;
-                    const subtotal = quantity * parseFloat(product.price);
-
-                    row.innerHTML = `
-                        <td class="table-cell product-name">${product.name}</td>
-                        <td class="table-cell">${product.origin}</td>
-                        <td class="table-cell price-cell">${parseFloat(product.price).toFixed(0)} ج.م</td>
-                        <td class="table-cell">
-                            <div class="quantity-controls">
-                                <button class="quantity-btn" onclick="updateQuantity('${product.name}', ${product.price}, -1)">➖</button>
-                                <div class="quantity-display">${quantity}</div>
-                                <button class="quantity-btn" onclick="updateQuantity('${product.name}', ${product.price}, 1)">➕</button>
-                            </div>
-                        </td>
-                        <td class="table-cell subtotal-cell">${subtotal.toFixed(0)} ج.م</td>
-                    `;
-                }
-
-                tbody.appendChild(row);
-            });
-
-            if (pageProducts.length === 0) {
-                const emptyRow = document.createElement('tr');
-                emptyRow.innerHTML = `
-                    <td colspan="5" class="table-cell">
-                        <div class="empty-state">
-                            <div class="empty-icon">🔍</div>
-                            <div>لا توجد منتجات تطابق البحث المحدد</div>
-                        </div>
-                    </td>
-                `;
-                tbody.appendChild(emptyRow);
-            }
-
-            updatePagination();
-            updateResultsInfo();
+    pageProducts.forEach(product => {
+        // Handle empty row separators (sub-category breaks)
+        if (product.isSeparator) {
+            const separatorRow = document.createElement('tr');
+            separatorRow.className = 'separator-row-visual';
+            separatorRow.innerHTML = `<td colspan="5"></td>`;
+            tbody.appendChild(separatorRow);
+            return;
         }
+
+        // Handle category change (main category separator)
+        if (product.category && product.category !== currentCategory) {
+            currentCategory = product.category;
+            const categoryRow = document.createElement('tr');
+            categoryRow.className = 'category-row';
+            categoryRow.innerHTML = `
+                <td colspan="5" class="category-cell">${currentCategory}</td>
+            `;
+            tbody.appendChild(categoryRow);
+        }
+
+        // Add product row (only products with data)
+        const quantity = cart[product.name]?.quantity || 0;
+        const subtotal = quantity * parseFloat(product.price);
+
+        const row = document.createElement('tr');
+        row.className = 'table-row';
+        row.innerHTML = `
+            <td class="table-cell product-name">${product.name}</td>
+            <td class="table-cell">${product.origin}</td>
+            <td class="table-cell price-cell">${parseFloat(product.price).toFixed(0)} ج.م</td>
+            <td class="table-cell">
+                <div class="quantity-controls">
+                    <button class="quantity-btn" onclick="updateQuantity('${product.name}', ${product.price}, -1)">➖</button>
+                    <div class="quantity-display">${quantity}</div>
+                    <button class="quantity-btn" onclick="updateQuantity('${product.name}', ${product.price}, 1)">➕</button>
+                </div>
+            </td>
+            <td class="table-cell subtotal-cell">${subtotal.toFixed(0)} ج.م</td>
+        `;
+        tbody.appendChild(row);
+    });
+
+    if (pageProducts.length === 0) {
+        const emptyRow = document.createElement('tr');
+        emptyRow.innerHTML = `
+            <td colspan="5" class="table-cell">
+                <div class="empty-state">
+                    <div class="empty-icon">🔍</div>
+                    <div>لا توجد منتجات تطابق البحث المحدد</div>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(emptyRow);
+    }
+
+    updatePagination();
+    updateResultsInfo();
+}
 
         // Update quantity in cart
         function updateQuantity(productName, price, change) {
