@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>شركة المهندس لقطع غيار السيارات</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200;300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Cairo', sans-serif;
+            direction: rtl;
+            text-align: right;
+            background-color: #f8fafc;
+            line-height: 1.6;
+        }
+        
+        /* Header Styles */
+        .company-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .company-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .company-subtitle {
+            font-size: 1.2rem;
+            font-weight: 300;
+            opacity: 0.9;
+        }
+        
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        /* Search and Filter Section */
+        .search-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .search-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .search-input, .filter-select {
+            padding: 0.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 1rem;
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .search-input:focus, .filter-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        /* Cart Summary */
+        .cart-summary {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .cart-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .cart-stat {
+            text-align: center;
+        }
+        
+        .cart-stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: block;
+        }
+        
+        .cart-stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-top: 0.25rem;
+        }
+        
+        /* Table Styles */
+        .table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            background: white;
+        }
+        
+        .products-table {
+            width: 100%;
+            min-width: 700px;
+            border-collapse: collapse;
+        }
+        
+        .table-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .table-header th {
+            padding: 1rem;
+            font-weight: 600;
+            text-align: center;
+            border-right: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .table-row {
+            border-bottom: 1px solid #e2e8f0;
+            transition: background-color 0.2s;
+        }
+        
+        .table-row:hover {
+            background-color: #f8fafc;
+        }
+        
+        .table-cell {
+            padding: 1rem;
+            text-align: center;
+            border-right: 1px solid #e2e8f0;
+        }
+        
+        .product-name {
+            text-align: right;
+            font-weight: 500;
+            max-width: 250px;
+            word-wrap: break-word;
+        }
+        
+        .price-cell {
+            font-weight: 600;
+            color: #059669;
+        }
+        
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        
+        .quantity-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            width: 35px;
+            height: 35px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .quantity-btn:hover {
+            background: #5a67d8;
+            transform: scale(1.1);
+        }
+        
+        .quantity-display {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            width: 50px;
+            height: 35px;
+            text-align: center;
+            font-weight: 600;
+            line-height: 31px;
+        }
+        
+        .subtotal-cell {
+            background: #f0f9f4;
+            font-weight: 700;
+            color: #059669;
+        }
+        
+        /* Category Separator */
+        .category-row {
+            background: linear-gradient(90deg, #f7fafc 0%, #e2e8f0 50%, #f7fafc 100%);
+        }
+        
+        .category-cell {
+            text-align: center;
+            font-weight: 600;
+            padding: 1rem;
+            color: #4a5568;
+            font-size: 1.1rem;
+        }
+        
+        /* Pagination */
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+        
+        .pagination-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .pagination-btn:hover:not(:disabled) {
+            background: #5a67d8;
+            transform: translateY(-1px);
+        }
+        
+        .pagination-btn:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+        }
+        
+        .pagination-info {
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            background: #f7fafc;
+            border-radius: 8px;
+        }
+        
+        /* WhatsApp Button */
+        .whatsapp-btn {
+            background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+            color: white;
+            border: none;
+            padding: 1.5rem 3rem;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            max-width: 400px;
+            margin: 2rem auto;
+            font-family: 'Cairo', sans-serif;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+        }
+        
+        .whatsapp-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(37, 211, 102, 0.3);
+        }
+        
+        /* Loading and Empty States */
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            font-size: 1.2rem;
+            color: #667eea;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #6b7280;
+        }
+        
+        .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .company-title {
+                font-size: 1.8rem;
+            }
+            
+            .company-subtitle {
+                font-size: 1rem;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+            
+            .search-row {
+                flex-direction: column;
+            }
+            
+            .cart-stats {
+                flex-direction: column;
+            }
+            
+            .table-header th,
+            .table-cell {
+                padding: 0.5rem;
+                font-size: 0.9rem;
+            }
+            
+            .quantity-btn {
+                width: 30px;
+                height: 30px;
+                font-size: 0.9rem;
+            }
+            
+            .quantity-display {
+                width: 40px;
+                height: 30px;
+                line-height: 26px;
+            }
+            
+            .pagination-btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+        }
+        
+        /* Hidden class for filtering */
+        .hidden {
+            display: none;
+        }
+        
+        /* Results info */
+        .results-info {
+            text-align: center;
+            margin: 1rem 0;
+            font-size: 1.1rem;
+            font-weight: 500;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* Separator Row Style */
+        .separator-row-visual {
+            background-color: #f0f4f8; /* Light gray background */
+            height: 10px; /* Small height for visual separation */
+            border-bottom: 1px dashed #cbd5e0;
+        }
+
+        .separator-row-visual td {
+            padding: 0; /* Remove padding */
+        }
+    </style>
+</head>
+<body>
+    <!-- Company Header -->
+    <div class="company-header">
+        <h1 class="company-title">🚗 شركة المهندس لقطع غيار السيارات</h1>
+        <p class="company-subtitle">متخصصون في توفير قطع غيار السيارات الأصلية والبديلة</p>
+    </div>
+
+    <div class="container">
+        <!-- Search and Filter Section -->
+        <div class="search-container">
+            <div class="search-row">
+                <input type="text" class="search-input" id="searchInput" placeholder="🔍 البحث في المنتجات...">
+                <select class="filter-select" id="originFilter">
+                    <option value="الكل">جميع المناشئ</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Results Info -->
+        <div class="results-info" id="resultsInfo">
+            <div class="loading">⏳ جاري تحميل المنتجات...</div>
+        </div>
+
+        <!-- Products Table -->
+        <div class="table-container">
+            <table class="products-table">
+                <thead class="table-header">
+                    <tr>
+                        <th style="width: 250px;">البند</th>
+                        <th style="width: 100px;">المنشأ</th>
+                        <th style="width: 80px;">السعر</th>
+                        <th style="width: 120px;">الكمية</th>
+                        <th style="width: 100px;">الإجمالي</th>
+                    </tr>
+                </thead>
+                <tbody id="productsTableBody">
+                    <!-- Products will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination-container" id="paginationContainer">
+            <button class="pagination-btn" id="firstPageBtn">⏮️ الأولى</button>
+            <button class="pagination-btn" id="prevPageBtn">⏪ السابقة</button>
+            <div class="pagination-info" id="pageInfo">صفحة 1 من 1</div>
+            <button class="pagination-btn" id="nextPageBtn">التالية ⏩</button>
+            <button class="pagination-btn" id="lastPageBtn">الأخيرة ⏭️</button>
+        </div>
+
+        <!-- Cart Summary -->
+        <div class="cart-summary" id="cartSummary" style="display: none;">
+            <h3>🛒 سلة التسوق</h3>
+            <div class="cart-stats">
+                <div class="cart-stat">
+                    <span class="cart-stat-number" id="cartItems">0</span>
+                    <span class="cart-stat-label">أصناف</span>
+                </div>
+                <div class="cart-stat">
+                    <span class="cart-stat-number" id="cartQuantity">0</span>
+                    <span class="cart-stat-label">قطعة</span>
+                </div>
+                <div class="cart-stat">
+                    <span class="cart-stat-number" id="cartTotal">0</span>
+                    <span class="cart-stat-label">ج.م الإجمالي</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- WhatsApp Button -->
+        <a href="#" class="whatsapp-btn" id="whatsappBtn" style="display: none;">
+            📱 إرسال الطلبية عبر واتساب
+        </a>
+    </div>
+
+    <script>
+        // App State
+        let products = [];
+        let filteredProducts = [];
+        let cart = {};
+        let currentPage = 1;
+        const itemsPerPage = 15;
+        const whatsappNumber = '201234567890'; // Replace with your WhatsApp number
+
+        // Remove sample data - data will now be fetched from Netlify Function
+        // const sampleProducts = [...];
+
+        // Initialize the app
+        async function initApp() { // Make initApp async
+            const resultsInfo = document.getElementById('resultsInfo');
+            resultsInfo.innerHTML = '<div class="loading">⏳ جاري تحميل المنتجات...</div>';
+
+            try {
+                const response = await fetch('/api/get-products');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                products = data.products; // Assign fetched products
+                
+                populateOriginFilter();
+                filterProducts();
+                setupEventListeners();
+            } catch (error) {
+                console.error('Error initializing app:', error);
+                resultsInfo.innerHTML = '<div class="empty-state"><div class="empty-icon">❌</div><div>فشل تحميل المنتجات. الرجاء المحاولة لاحقاً.</div></div>';
+            }
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            document.getElementById('searchInput').addEventListener('input', handleSearch);
+            document.getElementById('originFilter').addEventListener('change', handleFilter);
+            
+            // Pagination buttons
+            document.getElementById('firstPageBtn').addEventListener('click', () => goToPage(1));
+            document.getElementById('prevPageBtn').addEventListener('click', () => goToPage(currentPage - 1));
+            document.getElementById('nextPageBtn').addEventListener('click', () => goToPage(currentPage + 1));
+            document.getElementById('lastPageBtn').addEventListener('click', () => goToPage(getTotalPages()));
+        }
+
+        // Populate origin filter dropdown
+        function populateOriginFilter() {
+            const origins = [...new Set(products.map(p => p.origin))].sort();
+            const select = document.getElementById('originFilter');
+            
+            // Clear existing options except "الكل"
+            select.innerHTML = '<option value="الكل">جميع المناشئ</option>';
+            
+            origins.forEach(origin => {
+                const option = document.createElement('option');
+                option.value = origin;
+                option.textContent = origin;
+                select.appendChild(option);
+            });
+        }
+
+        // Handle search
+        function handleSearch() {
+            currentPage = 1;
+            filterProducts();
+        }
+
+        // Handle filter
+        function handleFilter() {
+            currentPage = 1;
+            filterProducts();
+        }
+
+        // Filter products based on search and filter criteria
+        function filterProducts() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const originFilter = document.getElementById('originFilter').value;
+
+            filteredProducts = products.filter(product => {
+                const matchesSearch = product.name.toLowerCase().includes(searchTerm);
+                const matchesOrigin = originFilter === 'الكل' || product.origin === originFilter;
+                return matchesSearch && matchesOrigin;
+            });
+
+            renderProducts();
+            updatePagination();
+            updateResultsInfo();
+            scrollToTableHeaders(); // New: Scroll to table headers
+        }
+
+        // Render products table
+        function renderProducts() {
+            const tbody = document.getElementById('productsTableBody');
+            tbody.innerHTML = '';
+
+            const startIdx = (currentPage - 1) * itemsPerPage;
+            const endIdx = startIdx + itemsPerPage;
+            const pageProducts = filteredProducts.slice(startIdx, endIdx);
+
+            let currentCategory = '';
+
+            pageProducts.forEach(product => {
+                // Add category separator if needed
+                if (product.category !== currentCategory) {
+                    currentCategory = product.category;
+                    const categoryRow = document.createElement('tr');
+                    categoryRow.className = 'category-row';
+                    categoryRow.innerHTML = `
+                        <td colspan="5" class="category-cell">${currentCategory}</td>
+                    `;
+                    tbody.appendChild(categoryRow);
+                }
+
+                // Add product row
+                const row = document.createElement('tr');
+                row.className = product.isSeparator ? 'separator-row-visual' : 'table-row';
+                
+                if (product.isSeparator) {
+                    row.innerHTML = `<td colspan="5"></td>`; // Empty cell for separator
+                } else {
+                    const quantity = cart[product.name]?.quantity || 0;
+                    const subtotal = quantity * parseFloat(product.price);
+
+                    row.innerHTML = `
+                        <td class="table-cell product-name">${product.name}</td>
+                        <td class="table-cell">${product.origin}</td>
+                        <td class="table-cell price-cell">${parseFloat(product.price).toFixed(0)} ج.م</td>
+                        <td class="table-cell">
+                            <div class="quantity-controls">
+                                <button class="quantity-btn" onclick="updateQuantity('${product.name}', ${product.price}, -1)">➖</button>
+                                <div class="quantity-display">${quantity}</div>
+                                <button class="quantity-btn" onclick="updateQuantity('${product.name}', ${product.price}, 1)">➕</button>
+                            </div>
+                        </td>
+                        <td class="table-cell subtotal-cell">${subtotal.toFixed(0)} ج.م</td>
+                    `;
+                }
+
+                tbody.appendChild(row);
+            });
+
+            if (pageProducts.length === 0) {
+                const emptyRow = document.createElement('tr');
+                emptyRow.innerHTML = `
+                    <td colspan="5" class="table-cell">
+                        <div class="empty-state">
+                            <div class="empty-icon">🔍</div>
+                            <div>لا توجد منتجات تطابق البحث المحدد</div>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(emptyRow);
+            }
+
+            updatePagination();
+            updateResultsInfo();
+        }
+
+        // Update quantity in cart
+        function updateQuantity(productName, price, change) {
+            if (!cart[productName]) {
+                cart[productName] = { quantity: 0, price: parseFloat(price) };
+            }
+
+            const newQuantity = cart[productName].quantity + change;
+
+            if (newQuantity <= 0) {
+                delete cart[productName];
+            } else {
+                cart[productName].quantity = newQuantity;
+            }
+
+            updateCartSummary();
+            renderProducts(); // Re-render to update subtotals
+        }
+
+        // Update cart summary
+        function updateCartSummary() {
+            const cartSummary = document.getElementById('cartSummary');
+            const whatsappBtn = document.getElementById('whatsappBtn');
+
+            const cartItems = Object.keys(cart).length;
+            const totalQuantity = Object.values(cart).reduce((sum, item) => sum + item.quantity, 0);
+            const totalCost = Object.values(cart).reduce((sum, item) => sum + (item.quantity * item.price), 0);
+
+            if (cartItems > 0) {
+                cartSummary.style.display = 'block';
+                whatsappBtn.style.display = 'block';
+
+                document.getElementById('cartItems').textContent = cartItems;
+                document.getElementById('cartQuantity').textContent = totalQuantity;
+                document.getElementById('cartTotal').textContent = totalCost.toFixed(0);
+
+                // Update WhatsApp button
+                const message = generateWhatsAppMessage();
+                const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+                whatsappBtn.href = whatsappUrl;
+            } else {
+                cartSummary.style.display = 'none';
+                whatsappBtn.style.display = 'none';
+            }
+        }
+
+        // Generate WhatsApp message
+        function generateWhatsAppMessage() {
+            const now = new Date();
+            const date = now.toLocaleString('ar-EG');
+
+            let message = `🌟 *شركة المهندس لقطع غيار السيارات* 🌟\n\n`;
+            message += `📅 *تاريخ الطلب:* ${date}\n\n`;
+            message += `📋 *تفاصيل الطلبية:*\n\n`;
+
+            let totalCost = 0;
+            let totalItems = 0;
+
+            Object.entries(cart).forEach(([productName, details]) => {
+                const subtotal = details.quantity * details.price;
+                totalCost += subtotal;
+                totalItems += details.quantity;
+
+                message += `🔹 *${productName}*\n`;
+                message += `   الكمية: ${details.quantity}\n`;
+                message += `   السعر: ${details.price} ج.م\n`;
+                message += `   الإجمالي: ${subtotal} ج.م\n\n`;
+            });
+
+            message += `${'─'.repeat(30)}\n`;
+            message += `📊 *ملخص الطلبية:*\n`;
+            message += `   📦 عدد الأصناف: ${Object.keys(cart).length}\n`;
+            message += `   🛒 إجمالي القطع: ${totalItems}\n`;
+            message += `   💰 الإجمالي النهائي: *${totalCost.toFixed(2)} ج.م*\n\n`;
+            message += `شكراً لثقتكم بنا! 🙏\n`;
+            message += `سيتم التواصل معكم قريباً لتأكيد الطلبية.`;
+
+            return message;
+        }
+
+        // Pagination functions
+        function getTotalPages() {
+            return Math.ceil(filteredProducts.length / itemsPerPage) || 1;
+        }
+
+        function goToPage(page) {
+            const totalPages = getTotalPages();
+            if (page >= 1 && page <= totalPages) {
+                currentPage = page;
+                renderProducts();
+                updatePagination();
+            }
+        }
+
+        function updatePagination() {
+            const totalPages = getTotalPages();
+            
+            document.getElementById('pageInfo').textContent = `صفحة ${currentPage} من ${totalPages}`;
+            
+            document.getElementById('firstPageBtn').disabled = currentPage === 1;
+            document.getElementById('prevPageBtn').disabled = currentPage === 1;
+            document.getElementById('nextPageBtn').disabled = currentPage === totalPages;
+            document.getElementById('lastPageBtn').disabled = currentPage === totalPages;
+        }
+
+        function updateResultsInfo() {
+            const resultsInfo = document.getElementById('resultsInfo');
+            if (filteredProducts.length > 0) {
+                const startIdx = (currentPage - 1) * itemsPerPage;
+                const endIdx = Math.min(startIdx + itemsPerPage, filteredProducts.length);
+                const showing = Math.min(itemsPerPage, filteredProducts.length - startIdx);
+                
+                resultsInfo.innerHTML = 
+                    `📊 عرض ${showing} من أصل ${filteredProducts.length} منتج | صفحة ${currentPage} من ${getTotalPages()}`;
+            } else if (document.getElementById('searchInput').value || document.getElementById('originFilter').value !== 'الكل') {
+                resultsInfo.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><div>لا توجد منتجات تطابق البحث المحدد</div></div>';
+            } else {
+                resultsInfo.innerHTML = '<div class="loading">⏳ جاري تحميل المنتجات...</div>'; // Default loading if no products yet
+            }
+        }
+
+        // New function: Scroll to table headers
+        function scrollToTableHeaders() {
+            const tableHeader = document.querySelector('.table-header');
+            if (tableHeader) {
+                tableHeader.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        // Initialize app when page loads
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
