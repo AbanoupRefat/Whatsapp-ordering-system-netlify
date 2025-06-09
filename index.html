@@ -481,7 +481,7 @@
             resultsInfo.innerHTML = '<div class="loading">⏳ جاري تحميل المنتجات...</div>';
 
             try {
-                const response = await fetch('/api/get-products');
+                const response = await fetch('/.netlify/functions/get-products');
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
