@@ -734,21 +734,24 @@ function renderProducts() {
             tbody.appendChild(categoryRow);
         }
 
-        // Add product row (only products with data)
-        const quantity = cart[product.id || product.name]?.quantity || 0;
-        const subtotal = quantity * parseFloat(product.price);
+        // Create consistent product key
+        const productKey = product.id || product.name;
+        const quantity = cart[productKey]?.quantity || 0;
+        const price = parseFloat(product.price);
+        const subtotal = quantity * price;
 
+        // Add product row (only products with data)
         const row = document.createElement('tr');
         row.className = 'table-row';
         row.innerHTML = `
             <td class="table-cell product-name">${product.name}</td>
             <td class="table-cell">${product.origin}</td>
-            <td class="table-cell price-cell">${parseFloat(product.price).toFixed(0)} ج.م</td>
+            <td class="table-cell price-cell">${price.toFixed(0)} ج.م</td>
             <td class="table-cell">
                 <div class="quantity-controls">
-                    <button class="quantity-btn" onclick="updateQuantity('${product.id || product.name}', ${product.price}, -1)">➖</button>
-<div class="quantity-display">${quantity}</div>
-<button class="quantity-btn" onclick="updateQuantity('${product.id || product.name}', ${product.price}, 1)">➕</button>
+                    <button class="quantity-btn" onclick="updateQuantity('${productKey.replace(/'/g, "\\'")}', ${price}, -1)">➖</button>
+                    <div class="quantity-display">${quantity}</div>
+                    <button class="quantity-btn" onclick="updateQuantity('${productKey.replace(/'/g, "\\'")}', ${price}, 1)">➕</button>
                 </div>
             </td>
             <td class="table-cell subtotal-cell">${subtotal.toFixed(0)} ج.م</td>
@@ -771,24 +774,54 @@ function renderProducts() {
 
     updatePagination();
     updateResultsInfo();
-}
+}}
 
         // Update quantity in cart
         function updateQuantity(productId, price, change) {
-    if (!cart[productId]) {
-        cart[productId] = { quantity: 0, price: parseFloat(price) };
+    // Ensure we have a consistent product identifier
+    const productKey = productId;
+    
+    if (!cart[productKey]) {
+        cart[productKey] = { quantity: 0, price: parseFloat(price) };
     }
 
-    const newQuantity = cart[productId].quantity + change;
+    const newQuantity = cart[productKey].quantity + change;
 
     if (newQuantity <= 0) {
-        delete cart[productId];
+        delete cart[productKey];
     } else {
-        cart[productId].quantity = newQuantity;
+        cart[productKey].quantity = newQuantity;
     }
 
     updateCartSummary();
-    renderProducts();
+    // Instead of re-rendering entire table, update specific row
+    updateProductRow(productKey);
+}
+        function updateProductRow(productKey) {
+    // Find all table rows
+    const rows = document.querySelectorAll('.table-row');
+    
+    rows.forEach(row => {
+        // Check if this row contains our product by looking at the onclick attributes
+        const minusBtn = row.querySelector('.quantity-btn[onclick*="' + productKey + '"]');
+        if (minusBtn) {
+            const quantity = cart[productKey]?.quantity || 0;
+            const price = cart[productKey]?.price || 0;
+            const subtotal = quantity * price;
+            
+            // Update quantity display
+            const quantityDisplay = row.querySelector('.quantity-display');
+            if (quantityDisplay) {
+                quantityDisplay.textContent = quantity;
+            }
+            
+            // Update subtotal
+            const subtotalCell = row.querySelector('.subtotal-cell');
+            if (subtotalCell) {
+                subtotalCell.textContent = subtotal.toFixed(0) + ' ج.م';
+            }
+        }
+    });
 }
 
         // Update cart summary
