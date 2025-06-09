@@ -614,19 +614,21 @@ async function initApp() {
             filterProducts();
         }
 
-        // Filter products based on search and filter criteria
-        function filterProducts() {
+       function filterProducts() {
     const searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
     const originFilter = document.getElementById('originFilter').value;
 
-    const filteredProducts = products.filter(product => {
+    filteredProducts = products.filter(product => {
         const productName = (product.name || '').trim().toLowerCase();
         const matchesSearch = productName.includes(searchTerm);
         const matchesOrigin = originFilter === 'الكل' || product.origin === originFilter;
         return matchesSearch && matchesOrigin;
     });
 
-    renderProducts(filteredProducts); // Update the UI with filtered results
+    renderProducts();
+    updatePagination();
+    updateResultsInfo();
+    scrollToTableHeaders();
 }
 
 
